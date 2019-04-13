@@ -15,6 +15,7 @@ Apify.main(async () => {
     const crawler = new Apify.CheerioCrawler({
         requestQueue,
         useApifyProxy: true,
+        apifyProxyGroups: ['BUYPROXIES94952'],
         minConcurrency: 15,
         maxConcurrency: 40,
         handlePageFunction: async ({ request, $ }) => {
