@@ -15,8 +15,10 @@ Apify.main(async () => {
     const crawler = new Apify.CheerioCrawler({
         requestQueue,
         useApifyProxy: true,
+        minConcurrency: 15,
+        maxConcurrency: 40,
         handlePageFunction: async ({ request, $ }) => {
-            const { isHomePage, isCity, isCountryList, isCountry } = request.userData;
+            const { isHomePage, isCity, isCountryList, isCountry, isHotelDetail } = request.userData;
             if (isHomePage) {
                 console.log(`Processing home page -  ${request.url}...`);
                 // Collecting the worldwide items only since UK is in Europe list
@@ -72,7 +74,7 @@ Apify.main(async () => {
                     });
                 });
 
-                await resolveInBatches(paginationLinks);
+                await resolveInBatches(Array.from(paginationLinks));
             } else if (isCity) {
                 console.log(`Processing city page -  ${request.url}...`);
 
@@ -104,8 +106,9 @@ Apify.main(async () => {
                         priceTag: `${hotelData.priceInteger} ${hotelData.priceCurrency}`,
                         thumbUrl: hotelData.thumb,
                         url: /^\//.test(hotelUrl) ? `https://www.hrs.com${hotelUrl}` : hotelUrl,
+                        isHotelDetail: true,
                     };
-                    return () => Apify.pushData(data);
+                    return () => requestQueue.addRequest({ url: data.url, userData: data });
                 });
 
                 await resolveInBatches(Array.from(dataToResolve));
@@ -121,6 +124,11 @@ Apify.main(async () => {
                     }) : Promise.resolve());
                 });
                 await resolveInBatches(Array.from(paginationLinks));
+            } else if (isHotelDetail) {
+                // TODO: Fill the data for detail
+                const data = { ...request.userData };
+
+                await Apify.pushData(data);
             }
         },
 
@@ -136,5 +144,5 @@ Apify.main(async () => {
     // Run the crawler and wait for it to finish.
     await crawler.run();
 
-    console.log('Crawler finished.');
+    console.log('Crawler finished. - running the detail crawler');
 });
