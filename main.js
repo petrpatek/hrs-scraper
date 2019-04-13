@@ -16,7 +16,7 @@ Apify.main(async () => {
         requestQueue,
         useApifyProxy: true,
         handlePageFunction: async ({ request, $ }) => {
-            const { isHomePage, isCity, isCountryList } = request.userData;
+            const { isHomePage, isCity, isCountryList, isCountry } = request.userData;
             if (isHomePage) {
                 console.log(`Processing home page -  ${request.url}...`);
                 // Collecting the worldwide items only since UK is in Europe list
@@ -49,7 +49,7 @@ Apify.main(async () => {
                     });
                 });
                 await resolveInBatches(Array.from(countryUrls));
-            } else if (isCountryList) {
+            } else if (isCountry) {
                 console.log(`Processing country list page -  ${request.url}...`);
                 const topLocationsUrls = $('.sw-hotel-list-topLocation__title__link').map((i, el) => {
                     const url = $(el).attr('href');
@@ -61,6 +61,18 @@ Apify.main(async () => {
                     });
                 });
                 await resolveInBatches(Array.from(topLocationsUrls));
+
+                const paginationLinks = $('.sw-hotel-list-pagination ul a').map((i, el) => {
+                    const url = $(el).attr('href');
+                    return () => requestQueue.addRequest({
+                        url: /^\//.test(url) ? `https://www.hrs.com${url}` : url,
+                        userData: {
+                            isCountry: true,
+                        },
+                    });
+                });
+
+                await resolveInBatches(paginationLinks);
             } else if (isCity) {
                 console.log(`Processing city page -  ${request.url}...`);
 
