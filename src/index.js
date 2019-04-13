@@ -16,8 +16,7 @@ Apify.main(async () => {
         requestQueue,
         useApifyProxy: true,
         apifyProxyGroups: ['BUYPROXIES94952'],
-        minConcurrency: 15,
-        maxConcurrency: 40,
+        minConcurrency: 35,
         handlePageFunction: async ({ request, $ }) => {
             const { isHomePage, isCity, isCountryList, isCountry, isHotelDetail } = request.userData;
             if (isHomePage) {
@@ -126,6 +125,7 @@ Apify.main(async () => {
                 });
                 await resolveInBatches(Array.from(paginationLinks));
             } else if (isHotelDetail) {
+                console.log(`Processing hotel detail page -  ${request.url}...`);
                 // TODO: Fill the data for detail
                 const data = { ...request.userData };
 
